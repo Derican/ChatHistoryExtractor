@@ -1,8 +1,9 @@
 from appium import webdriver
 from appium.webdriver.common.appiumby import AppiumBy
 from appium.options.common.base import AppiumOptions
-import asyncio
+import asyncio, appium
 import re, time, string, json, cleantext
+from selenium.common.exceptions import NoSuchElementException
 
 appium_server_url = 'http://localhost:4723'
 
@@ -36,11 +37,11 @@ def extract_qq_chat():
                 while True:
                     emoji_index = text.index('\x14')
                     text = text[:emoji_index] + text[emoji_index + 2:]
-            except Exception as e:
+            except ValueError as e:
                 pass
             # Remove other emoji
             text = cleantext.clean(text, to_ascii=False, lower=False, no_emoji=True)
-        except Exception as e:
+        except NoSuchElementException as e:
             text = ""
         return label, text
 
@@ -139,7 +140,8 @@ def extract_qq_chat():
             break
         current_first_nlp = new_first_nlp
 
-    json.dump(list(reversed(json_chat)), open("qq_chat.json", "w", encoding="utf-8"), ensure_ascii=False)
+    # print(json_chat)
+    json.dump(list(reversed(json_chat)), open(f"output_{time.time()}.json", "w", encoding="utf-8"), ensure_ascii=False)
 
 
     driver.quit()
