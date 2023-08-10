@@ -1,7 +1,16 @@
-import json, sys, os, re, cleantext
+import json, sys, os, re, cleantext, time
 from wechat_emoji_config import WECHAT_EMOJI
 
 root_path = r"C:\Users\Derican\Documents\WechatExported0809\隔壁班的江建岳"
+
+def replace(matched):
+    h_s = matched.group(1)
+    h_i = int(h_s, base=16)
+    return chr(h_i)
+
+def uni_to_cn(s: str):
+    result = re.sub(r"\\u([0-9a-fA-F]{4})", replace, s)
+    return result
 
 def process_chat_list(chat_list):
     # Remove None and Empty
@@ -63,7 +72,9 @@ def convert_wechat_to_json(wechat_path):
                         # Remove "[图片]", "[表情]", "[文件: ]", "[语音 1]"
                         content = re.sub(r"\[.+?\]", "", content)
                         # Remove \ue[0-9a-f]{3}
-                        content = re.sub(r"\\ue[0-9a-f]{3}", "", content)
+                        content = re.sub(r"\\ue[0-9a-f]{3}", "", content.encode("unicode_escape").decode("utf-8"))
+                        # Replace \u[0-9a-f]{4} to unicode
+                        content = uni_to_cn(content)
                         instructions_output.append(
                             (
                             'output' if name == '隔壁班的江建岳' else 'instruction',
@@ -72,7 +83,7 @@ def convert_wechat_to_json(wechat_path):
                         )
                 json_output = process_chat_list(instructions_output)
                 output += json_output
-    with open("wx_chat.json", "w", encoding="utf-8") as f:
+    with open(f"output_{time.time()}.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
